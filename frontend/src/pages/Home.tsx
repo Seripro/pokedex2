@@ -10,6 +10,7 @@ export const Home = () => {
   const [allPokes, setAllPokes] = useState<PokemonDetailType[]>([]);
   const [isModalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState<boolean>(false);
+  const [favorites, setFavorites] = useState<number[]>([]);
   const [searchParams] = useSearchParams();
   const selectedTypes = searchParams.get("types")?.split(",") || [];
   const selectedName = searchParams.get("name");
@@ -20,6 +21,9 @@ export const Home = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        const res = await fetch("http://localhost:8000/favorites");
+        const favorites: number[] = await res.json();
+        setFavorites(favorites);
         let allData = await getPokemonsDetail(1, 151);
         setAllPokes(allData);
 
@@ -63,6 +67,7 @@ export const Home = () => {
         body: JSON.stringify({ pokemon_id: id }), // データをJSON文字列に変換
       });
       console.log(response);
+      setFavorites([...favorites, id]);
     }
   };
 
@@ -79,7 +84,13 @@ export const Home = () => {
           <Link to={`/detail/${poke.id}`} state={poke}>
             <PokemonCard data={poke} />
           </Link>
-          <button onClick={() => handleFavo(poke.id)}>お気に入りボタン</button>
+          {favorites.includes(poke.id) ? (
+            <p>お気に入り済み</p>
+          ) : (
+            <button onClick={() => handleFavo(poke.id)}>
+              お気に入りボタン
+            </button>
+          )}
         </div>
       ))}
     </>
