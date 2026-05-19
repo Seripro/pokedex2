@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
+from typing import Optional
 
 from app.database import engine, get_db
 from app import models
@@ -27,17 +28,27 @@ def get_current_user():
 class FavoriteCreate(BaseModel):
     pokemon_id: int
 
+class FavoriteUpdate(BaseModel):
+    memo: str
+
+# 💡 新しく追記：お気に入り一覧を返すときの型定義
+class FavoriteResponse(BaseModel):
+    pokemon_id: int
+    memo: Optional[str] = None # メモは None（null）の可能性もある
+
+    class Config:
+        from_attributes = True # SQLAlchemyのモデルからPydanticの型に自動変換するための設定
 
 # ==========================================
 # 1. お気に入り一覧取得 (GET /favorites)
 # ==========================================
-@app.get("/favorites")
+@app.get("/favorites", response_model=list[FavoriteResponse])
 def get_favorites(db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
     user_id = user["user_id"]
     # ログイン中ユーザーのお気に入りレコードを全件取得
     favs = db.query(models.Favorite).filter(models.Favorite.user_id == user_id).all()
     # ポケモンのID（整数）だけの配列にしてフロントに返す [6, 25, 150]
-    return [f.pokemon_id for f in favs]
+    return favs
 
 
 # ==========================================
