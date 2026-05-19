@@ -53,6 +53,19 @@ export const Home = () => {
     fetchData();
   }, [searchParams]);
 
+  const handleFavo = async (id: number) => {
+    if (data) {
+      const response = await fetch("http://localhost:8000/favorites", {
+        method: "POST", // POSTメソッドを指定
+        headers: {
+          "Content-Type": "application/json", // JSONを送ることを伝える
+        },
+        body: JSON.stringify({ pokemon_id: id }), // データをJSON文字列に変換
+      });
+      console.log(response);
+    }
+  };
+
   if (loading) return <p>loading...</p>;
 
   return (
@@ -62,9 +75,12 @@ export const Home = () => {
         <Modal isOpen={isModalOpen} onClose={closeModal} pokemons={allPokes} />
       </div>
       {data.map((poke) => (
-        <Link key={poke.id} to={`/detail/${poke.id}`} state={poke}>
-          <PokemonCard data={poke} />
-        </Link>
+        <div key={poke.id}>
+          <Link to={`/detail/${poke.id}`} state={poke}>
+            <PokemonCard data={poke} />
+          </Link>
+          <button onClick={() => handleFavo(poke.id)}>お気に入りボタン</button>
+        </div>
       ))}
     </>
   );
