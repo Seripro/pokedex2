@@ -12,12 +12,8 @@ function Favorites() {
       setLoading(true);
       try {
         const res = await fetch("http://localhost:8000/favorites");
-        console.log(res);
         const favorites: number[] = await res.json();
-        console.log(favorites);
-        console.log(favorites[0]);
         const Data = await getPokemonsDetail(1, 151);
-        console.log(Data);
         setData(Data.filter((data) => favorites.includes(data.id)));
       } catch (e) {
         console.log(e);
