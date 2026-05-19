@@ -105,3 +105,20 @@ def remove_favorite(
     db.commit()
     
     return {"message": "お気に入りを解除しました"}
+
+@app.patch("/favorites/{pokemon_id}/memo")
+def update_favorite_memo(pokemon_id: int, data: FavoriteUpdate, db: Session = Depends(get_db), user: dict = Depends(get_current_user)):
+    user_id = user["user_id"]
+
+    fav = db.query(models.Favorite).filter(
+        models.Favorite.user_id == user_id,
+        models.Favorite.pokemon_id == pokemon_id
+    ).first()
+
+    if not fav:
+        raise HTTPException(status_code=404, detail="お気に入りデータが見つかりません")
+
+    fav.memo = data.memo
+    db.commit()
+    db.refresh(fav)
+    return {"message": "メモを更新しました", "pokemon_id": pokemon_id, "memo": fav.memo}
