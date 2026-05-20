@@ -4,6 +4,7 @@ import type { PokemonDetailType } from "../type/pokemon";
 import { getPokemonsDetail } from "../api/pokemon";
 import { Link, useSearchParams } from "react-router-dom";
 import { Modal } from "../components/Modal";
+import type { FavoritesType } from "../type/favorites";
 
 export const Home = () => {
   const [data, setData] = useState<PokemonDetailType[]>([]);
@@ -22,8 +23,9 @@ export const Home = () => {
       setLoading(true);
       try {
         const res = await fetch("http://localhost:8000/favorites");
-        const favorites: number[] = await res.json();
-        setFavorites(favorites);
+        const favorites: FavoritesType[] = await res.json();
+        const newFavorites = favorites.map((f) => f.pokemon_id);
+        setFavorites(newFavorites);
         let allData = await getPokemonsDetail(1, 151);
         setAllPokes(allData);
 
