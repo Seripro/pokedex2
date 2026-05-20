@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PokemonCard } from "../components/PokemonCard";
 import type { PokemonDetailType } from "../type/pokemon";
 import { getPokemonsDetail } from "../api/pokemon";
 import { Link, useSearchParams } from "react-router-dom";
 import { Modal } from "../components/Modal";
 import type { FavoritesType } from "../type/favorites";
+import { fetchWithAuth } from "../api/client";
 
 export const Home = () => {
   const [data, setData] = useState<PokemonDetailType[]>([]);
@@ -13,7 +14,10 @@ export const Home = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [searchParams] = useSearchParams();
-  const selectedTypes = searchParams.get("types")?.split(",") || [];
+  const selectedTypes = useMemo(
+    () => searchParams.get("types")?.split(",") || [],
+    [searchParams],
+  );
   const selectedName = searchParams.get("name");
 
   const openModal = () => setModalOpen(true);
@@ -22,7 +26,7 @@ export const Home = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/favorites");
+        const res = await fetchWithAuth("http://localhost:8000/favorites");
         const favorites: FavoritesType[] = await res.json();
         const newFavorites = favorites.map((f) => f.pokemon_id);
         setFavorites(newFavorites);
@@ -57,15 +61,12 @@ export const Home = () => {
       }
     };
     fetchData();
-  }, [searchParams]);
+  }, [selectedName, selectedTypes]);
 
   const handleFavo = async (id: number) => {
     if (data) {
-      const response = await fetch("http://localhost:8000/favorites", {
+      const response = await fetchWithAuth("http://localhost:8000/favorites", {
         method: "POST", // POSTメソッドを指定
-        headers: {
-          "Content-Type": "application/json", // JSONを送ることを伝える
-        },
         body: JSON.stringify({ pokemon_id: id }), // データをJSON文字列に変換
       });
       console.log(response);

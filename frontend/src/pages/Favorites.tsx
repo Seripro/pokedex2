@@ -3,6 +3,7 @@ import { getPokemonsDetail } from "../api/pokemon";
 import type { PokemonDetailType } from "../type/pokemon";
 import { PokemonCard } from "../components/PokemonCard";
 import type { FavoritesType } from "../type/favorites";
+import { fetchWithAuth } from "../api/client";
 
 function Favorites() {
   const [data, setData] = useState<PokemonDetailType[]>([]);
@@ -14,7 +15,7 @@ function Favorites() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/favorites");
+        const res = await fetchWithAuth("http://localhost:8000/favorites");
         const favorites: FavoritesType[] = await res.json();
         setFavorites(favorites);
         const Data = await getPokemonsDetail(1, 151);
@@ -32,13 +33,10 @@ function Favorites() {
   const handleSave = async (id: number) => {
     if (values[id] && values[id].trim() !== "") {
       try {
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `http://localhost:8000/favorites/${id}/memo`,
           {
             method: "PATCH", // POSTメソッドを指定
-            headers: {
-              "Content-Type": "application/json", // JSONを送ることを伝える
-            },
             body: JSON.stringify({ pokemon_id: id, memo: values[id] }), // データをJSON文字列に変換
           },
         );
