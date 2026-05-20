@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -18,6 +19,7 @@ SUPABASE_KEY = os.getenv("VITE_SUPABASE_PUBLISHABLE_KEY")
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+security = HTTPBearer(auto_error=False)
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,13 +31,15 @@ app.add_middleware(
 
 # 💡 Supabase JWT から ユーザーID（sub クレーム）を抽出
 # やってることはtryの中だけみとけ
-def get_current_user(authorization: str = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
+def get_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+):
+    if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing or invalid authorization header",
         )
-    token = authorization[7:]  # "Bearer " を除去
+    token = credentials.credentials
     try:
         # JWT をデコード（署名検証は省略、公開鍵でデコード可能）
         payload = jwt.decode(token, options={"verify_signature": False}) # トークンを読める形式にしてる
